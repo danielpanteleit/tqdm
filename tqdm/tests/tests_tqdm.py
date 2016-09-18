@@ -1233,3 +1233,30 @@ def test_len():
     with closing(StringIO()) as f:
         with tqdm(np.zeros((3, 4)), file=f) as t:
             assert len(t) == 3
+
+
+@with_setup(pretest, posttest)
+def test_postfix():
+    """ Test postfix """
+    postfix = {'float': 0.321034, 'gen': 543, 'str': 'h', 'lst': [1, 2]}
+    expected = ['lst=[1, 2]', 'float=0.321', 'gen=543', 'str=h']
+
+    # Test postfix set at init
+    with closing(StringIO()) as our_file:
+        t1 = tqdm(total=10, file=our_file, desc='pos0 bar',
+                  bar_format='{r_bar}', postfix=postfix)
+        t1.refresh()
+        out = our_file.getvalue()
+
+    # Test postfix set after init
+    with closing(StringIO()) as our_file:
+        t2 = trange(10, file=our_file, desc='pos1 bar',
+                    bar_format='{r_bar}', postfix=None)
+        t2.set_postfix(**postfix)
+        t2.refresh()
+        out2 = our_file.getvalue()
+
+    # Order of items in dict may change, so need a loop to check per item
+    for res in expected:
+        assert res in out
+        assert res in out2
